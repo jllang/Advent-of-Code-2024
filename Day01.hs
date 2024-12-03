@@ -15,7 +15,7 @@ task_1_1 =
     let split = \case
             [a, b] -> (a, b)
             _ -> error "Each line must have exactly two numbers in it"
-     in readFile "input-1-1" <&> \input ->
+     in readFile "input-01" <&> \input ->
             lines input
                 & map (split . map (read . unpack) . words)
                 & unzip
