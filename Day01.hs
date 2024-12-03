@@ -12,8 +12,7 @@ import Prelude hiding (lines, readFile, words)
 
 task_1_1 :: IO Int
 task_1_1 =
-    let split :: [Int] -> (Int, Int)
-        split = \case
+    let split = \case
             [a, b] -> (a, b)
             _ -> error "Each line must have exactly two numbers in it"
      in readFile "input-1-1" <&> \input ->
