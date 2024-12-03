@@ -21,8 +21,8 @@ sortInputs input =
             & bimap sort sort
             & uncurry zip
 
-task_1_1 :: IO Int
-task_1_1 =
+task1 :: IO Int
+task1 =
     readFile "input-01" <&> \input ->
         sortInputs input
             & map (\(x, y) -> abs (x - y))
