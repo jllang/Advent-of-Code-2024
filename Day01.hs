@@ -23,7 +23,4 @@ sortInputs input =
 
 task1 :: IO Int
 task1 =
-    readFile "input-01" <&> \input ->
-        sortInputs input
-            & map (\(x, y) -> abs (x - y))
-            & sum
+    sum . map (\(x, y) -> abs (x - y)) . sortInputs <$> readFile "input-01"
