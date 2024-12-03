@@ -44,7 +44,7 @@ task2 inputs =
         helper (xs@(x : _) : xss) yss = case dropWhile ((< x) . head) yss of
             (zs@(z : _) : zss)
                 | z == x ->
-                    length xs * z * length zs : helper xss yss
+                    length xs * z * length zs : helper xss zss
             (_ : zss) ->
                 helper xss yss
             _ ->
