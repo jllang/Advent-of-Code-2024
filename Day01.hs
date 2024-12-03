@@ -10,7 +10,7 @@ import Data.Text (Text, lines, unpack, words)
 import Data.Text.IO (readFile)
 import Prelude hiding (lines, readFile, words)
 
-sortInputs :: Text -> [(Int, Int)]
+sortInputs :: Text -> ([Int], [Int])
 sortInputs input =
     let split = \case
             [a, b] -> (a, b)
@@ -19,8 +19,7 @@ sortInputs input =
             & map (split . map (read . unpack) . words)
             & unzip
             & bimap sort sort
-            & uncurry zip
 
-task1 :: IO Int
+task1 :: Text -> Int
 task1 =
-    sum . map (\(x, y) -> abs (x - y)) . sortInputs <$> readFile "input-01"
+    sum . map (\(x, y) -> abs (x - y)) . uncurry zip . sortInputs
