@@ -54,3 +54,9 @@ task2 inputs =
             & bimap group group
             & uncurry helper
             & sum
+
+main :: IO ()
+main = do
+    input <- getInput
+    putStrLn $ "task 1 answer: " <> show (task1 input)
+    putStrLn $ "task 2 answer: " <> show (task2 input)
