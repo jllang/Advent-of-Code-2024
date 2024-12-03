@@ -46,7 +46,7 @@ task2 inputs =
                 | z == x ->
                     length xs * z * length zs : helper xss yss
             (_ : zss) ->
-                0 : helper xss yss
+                helper xss yss
             _ ->
                 []
         helper [] _ = []
