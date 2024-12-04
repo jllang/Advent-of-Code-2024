@@ -56,7 +56,8 @@ task1 =
 task2 :: [Report] -> Int
 task2 =
     let removeDiagonal r =
-            [take i r ++ drop (i + 1) r | i <- [0 .. length r]]
+            -- We don't even need the full report `r`
+            [take i r ++ drop (i + 1) r | i <- [0 .. length r - 1]]
      in sum . map (fromBool . or . map valid . removeDiagonal)
 
 main :: IO ()
