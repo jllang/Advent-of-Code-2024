@@ -24,8 +24,8 @@ example =
         \3   9\n\
         \3   3"
 
-sortInputs :: Text -> ([Int], [Int])
-sortInputs input =
+parse :: Text -> ([Int], [Int])
+parse input =
     let split = \case
             [a, b] -> (a, b)
             _ -> error "Each line must have exactly two numbers in it"
@@ -34,12 +34,12 @@ sortInputs input =
             & unzip
             & bimap sort sort
 
-task1 :: Text -> Int
+task1 :: ([Int], [Int]) -> Int
 task1 =
-    sum . map (\(x, y) -> abs (x - y)) . uncurry zip . sortInputs
+    sum . map (\(x, y) -> abs (x - y)) . uncurry zip
 
-task2 :: Text -> Int
-task2 inputs =
+task2 :: ([Int], [Int]) -> Int
+task2 lists =
     let helper :: [[Int]] -> [[Int]] -> [Int]
         helper (xs@(x : _) : xss) yss = case dropWhile ((< x) . head) yss of
             (zs@(z : _) : zss)
@@ -50,13 +50,12 @@ task2 inputs =
             _ ->
                 []
         helper [] _ = []
-     in sortInputs inputs
-            & bimap group group
+     in bimap group group lists
             & uncurry helper
             & sum
 
 main :: IO ()
 main = do
-    input <- getInput
-    putStrLn $ "task 1 answer: " <> show (task1 input)
-    putStrLn $ "task 2 answer: " <> show (task2 input)
+    lists <- parse <$> getInput
+    putStrLn $ "task 1 answer: " <> show (task1 lists)
+    putStrLn $ "task 2 answer: " <> show (task2 lists)
