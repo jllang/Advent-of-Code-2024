@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# OPTIONS_GHC -Wno-incomplete-patterns -Wno-x-partial #-}
 
 module Day02 where
 
@@ -33,18 +34,24 @@ parse t = map (map (read . unpack) . words) $ lines t
 close :: Level -> Level -> Bool
 close l1 l2 =
     let d = abs (l1 - l2)
-     in d >= 1 && d <= 3
+     in 1 <= d && d <= 3
 
 valid :: Report -> Bool
 valid ls =
-    let inc = l1 < l2 where [l1, l2] = take 2 ls
+    let inc = l1 < l2 where [l1, l2] = take 2 ls -- We assume `length ls >= 2`
         helper (l, l')
             | inc = l < l' && close l l'
             | otherwise = l >= l' && close l l'
-     in and . map helper . zip ls $ tail ls
+     in and . map helper . zip ls $ tail ls -- We assume `length ls >= 2`
+
+fromBool :: Bool -> Int
+fromBool b
+    | b = 1
+    | otherwise = 0
 
 task1 :: Text -> Int
-task1 = sum . map ((\r -> if valid r then 1 else 0)) . parse
+task1 =
+    sum . map (fromBool . valid) . parse
 
 main :: IO ()
 main = do
