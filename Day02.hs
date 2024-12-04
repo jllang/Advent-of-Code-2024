@@ -49,13 +49,19 @@ fromBool b
     | b = 1
     | otherwise = 0
 
-task1 :: Text -> Int
+task1 :: [Report] -> Int
 task1 =
-    sum . map (fromBool . valid) . parse
+    sum . map (fromBool . valid)
+
+task2 :: [Report] -> Int
+task2 =
+    let removeDiagonal r =
+            [take i r ++ drop (i + 1) r | i <- [0 .. length r]]
+     in sum . map (fromBool . or . map valid . removeDiagonal)
 
 main :: IO ()
 main = do
-    input <- getInput
+    input <- parse <$> getInput
     putStrLn $ "task 1 answer: " <> show (task1 input)
-    -- putStrLn $ "task 2 answer: " <> show (task2 input)
+    putStrLn $ "task 2 answer: " <> show (task2 input)
     return ()
