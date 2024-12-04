@@ -64,4 +64,3 @@ main = do
     input <- parse <$> getInput
     putStrLn $ "task 1 answer: " <> show (task1 input)
     putStrLn $ "task 2 answer: " <> show (task2 input)
-    return ()
