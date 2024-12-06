@@ -3,10 +3,8 @@
 module Day01 where
 
 import Data.Bifunctor (bimap)
-import Data.Foldable (concatMap)
 import Data.Function ((&))
-import Data.Functor ((<&>))
-import Data.List (dropWhile, group, map, nub, sort, unzip, zip)
+import Data.List (group, sort)
 import Data.Text (Text, lines, pack, unpack, words)
 import Data.Text.IO (readFile)
 import Prelude hiding (lines, readFile, words)
