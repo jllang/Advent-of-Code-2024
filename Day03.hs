@@ -1,4 +1,4 @@
-module Day02 where
+module Day03 where
 
 import Data.Text (Text, concat, pack, splitOn, unpack)
 import Data.Text.IO (readFile)
