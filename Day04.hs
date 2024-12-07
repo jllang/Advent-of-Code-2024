@@ -1,11 +1,7 @@
 module Day04 where
 
-import Data.Array (Array, array, assocs, bounds, elems, (!), (//))
-import Data.Bifunctor
-import Data.Char (chr, isUpper, toLower, toUpper)
-import Data.Function ((&))
+import Data.Array (Array, array, bounds, (!))
 import Data.List (sortBy, tails)
-import Data.List.Extra (chunksOf)
 import Data.Ord (comparing)
 import Prelude
 
