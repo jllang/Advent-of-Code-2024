@@ -47,38 +47,34 @@ task1 a =
                 , word == "XMAS" || word == "SAMX"
                 ]
         horiz =
-            count $
+            [ (i, j)
+            | i <- [1 .. rows]
+            , j <- [1 .. cols]
+            ]
+        vert =
+            [ (i, j)
+            | j <- [1 .. cols]
+            , i <- [1 .. rows]
+            ]
+        diag =
+            sortBy
+                (comparing (\(i, j) -> i - j))
                 [ (i, j)
                 | i <- [1 .. rows]
                 , j <- [1 .. cols]
+                -- , i - j > -(cols - 3)
+                -- , j - i > -(rows - 3)
                 ]
-        vert =
-            count $
-                [ (i, j)
-                | j <- [1 .. cols]
-                , i <- [1 .. rows]
-                ]
-        diag =
-            count $
-                sortBy
-                    (comparing (\(i, j) -> i - j))
-                    [ (i, j)
-                    | i <- [1 .. rows]
-                    , j <- [1 .. cols]
-                    , i - j > -(cols - 3)
-                    , j - i > -(rows - 3)
-                    ]
         anti =
-            count $
-                sortBy
-                    (comparing (\(i, j) -> i + j))
-                    [ (i, j)
-                    | i <- [1 .. rows]
-                    , j <- [1 .. cols]
-                    , i + j > 4
-                    , i + j < rows + cols - 2
-                    ]
-     in horiz + vert + diag + anti
+            sortBy
+                (comparing (\(i, j) -> i + j))
+                [ (i, j)
+                | i <- [1 .. rows]
+                , j <- [1 .. cols]
+                -- , i + j > 4
+                -- , i + j < rows + cols - 2
+                ]
+     in count $ horiz ++ vert ++ diag ++ anti
 
 task2 :: String -> Int
 task2 t =
