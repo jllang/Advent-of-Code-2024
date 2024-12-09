@@ -29,11 +29,9 @@ parse t =
         elems = [((i, j), c) | (i, l) <- zip [1 ..] ls, (j, c) <- zip [1 ..] l]
      in array dim elems
 
-task1 :: String -> Int
-task1 t =
-    let a :: Array (Int, Int) Char
-        a = parse t
-        (_, (rows, cols)) = bounds a
+task1 :: Array (Int, Int) Char -> Int
+task1 a =
+    let (_, (rows, cols)) = bounds a
         allSame xs = and $ map (== head xs) (tail xs)
         count is =
             length
@@ -88,7 +86,7 @@ task2 t =
 
 main :: IO ()
 main = do
-    input <- getInput
-    putStrLn $ "task 1 answer: " <> show (task1 input)
+    array <- parse <$> getInput
+    putStrLn $ "task 1 answer: " <> show (task1 array)
 
--- putStrLn $ "task 2 answer: " <> show (task2 input)
+-- putStrLn $ "task 2 answer: " <> show (task2 array)
