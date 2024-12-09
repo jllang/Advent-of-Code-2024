@@ -76,13 +76,21 @@ task1 a =
                 ]
      in count $ horiz ++ vert ++ diag ++ anti
 
-task2 :: String -> Int
-task2 t =
-    undefined
+task2 :: Array (Int, Int) Char -> Int
+task2 a =
+    let (_, (rows, cols)) = bounds a
+        add (w, x) (y, z) = (w + y, x + z)
+        offsets = [(i, j) | i <- [0 .. rows - 3], j <- [0 .. cols - 3]]
+        shape = [(1, 1), (1, 3), (2, 2), (3, 1), (3, 3)]
+     in length
+            [ ()
+            | o <- offsets
+            , let word = map ((a !) . (add o)) shape
+            , word `elem` ["SSAMM", "MSAMS", "MMASS", "SMASM"]
+            ]
 
 main :: IO ()
 main = do
     array <- parse <$> getInput
     putStrLn $ "task 1 answer: " <> show (task1 array)
-
--- putStrLn $ "task 2 answer: " <> show (task2 array)
+    putStrLn $ "task 2 answer: " <> show (task2 array)
