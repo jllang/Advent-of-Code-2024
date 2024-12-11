@@ -69,10 +69,13 @@ parse t =
         , tokenize "([0-9]+,)+[0-9]+" ','
         )
 
+before :: Successors -> Page -> Page -> Bool
+before m p q = fromMaybe False ((elem q) <$> m !? p)
+
 valid :: Successors -> Update -> Bool
 valid m =
     and
-        . map (\(p, q) -> fromMaybe False ((elem q) <$> m !? p))
+        . map (uncurry (before m))
         . (zip <*> tail)
 
 middle :: [a] -> a
