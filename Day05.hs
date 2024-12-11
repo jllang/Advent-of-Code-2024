@@ -1,25 +1,20 @@
 {-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE OverloadedRecordDot #-}
 
 module Day05 where
 
-import Control.Monad.Trans.State.Strict (State, get, gets)
-import Data.Map.Strict (Map)
+import Data.Map.Strict (Map, (!?))
 import qualified Data.Map.Strict as Map
-import Data.Text (Text, concat, empty, length, lines, pack, partition, split, takeWhile, unpack)
+import Data.Text (Text, pack, unpack)
+import qualified Data.Text as Text
 import Data.Text.IO (readFile)
 import Debug.Trace
 import Text.Regex.TDFA (getAllTextMatches, (=~))
-import Prelude hiding (length, lines, readFile, takeWhile)
+import Prelude hiding (readFile)
 
-data Rule = Before Int Int
-type Successors = Map Int [Int]
-type Update = [Int]
-data ParseResult = ParseResult
-    { successors :: Successors
-    , updates :: [Update]
-    }
-    deriving (Show)
+type Page = Int
+type Successors = Map Page [Page]
+type Update = [Page]
+type ParseResult = (Successors, [Update])
 
 getInput :: IO Text
 getInput = readFile "input-05"
@@ -61,15 +56,32 @@ type Delimiter = Char
 
 parse :: Text -> ParseResult
 parse t =
-    let tokenize :: Regex -> Delimiter -> [[Int]]
+    let tokenize :: Regex -> Delimiter -> [[Page]]
         tokenize r d =
-            map (read . unpack) . split (== d)
+            map (read . unpack) . Text.split (== d)
                 <$> (getAllTextMatches (t =~ r))
         rule r m =
             case r of
                 [lhs, rhs] -> Map.insertWith (<>) lhs [rhs] m
                 _ -> error "malformed rule"
-     in trace (show t) $
-            ParseResult
-                (foldr rule Map.empty (tokenize "[0-9]+\\|[0-9]+" '|'))
-                (tokenize "([0-9]+,)+[0-9]+" ',')
+     in ( foldr rule Map.empty (tokenize "[0-9]+\\|[0-9]+" '|')
+        , tokenize "([0-9]+,)+[0-9]+" ','
+        )
+
+task1 :: ParseResult -> Int
+task1 (m, us) =
+    let middle xs = head $ drop (length xs `div` 2) xs
+        valid u = case u of
+            (p : q : ps) ->
+                case (q `elem`) <$> m !? p of
+                    Just True -> valid (q : ps)
+                    _ -> False
+            _ -> True
+     in sum . map middle $ filter valid us
+
+main :: IO ()
+main = do
+    lists <- parse <$> getInput
+    putStrLn $ "task 1 answer: " <> show (task1 lists)
+
+-- putStrLn $ "task 2 answer: " <> show (task2 lists)
