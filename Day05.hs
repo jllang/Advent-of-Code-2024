@@ -2,8 +2,10 @@
 
 module Day05 where
 
+import Data.Function ((&))
 import Data.Map.Strict (Map, (!?))
 import qualified Data.Map.Strict as Map
+import Data.Maybe (fromMaybe)
 import Data.Text (Text, pack, unpack)
 import qualified Data.Text as Text
 import Data.Text.IO (readFile)
@@ -71,13 +73,13 @@ parse t =
 task1 :: ParseResult -> Int
 task1 (m, us) =
     let middle xs = head $ drop (length xs `div` 2) xs
-        valid u = case u of
-            (p : q : ps) ->
-                case (q `elem`) <$> m !? p of
-                    Just True -> valid (q : ps)
-                    _ -> False
-            _ -> True
-     in sum . map middle $ filter valid us
+        valid u =
+            zip u (tail u)
+                & map (\(p, q) -> fromMaybe False ((elem q) <$> m !? p))
+                & and
+     in filter valid us
+            & map middle
+            & sum
 
 main :: IO ()
 main = do
