@@ -2,9 +2,11 @@
 
 module Day05 where
 
+import Data.List (partition, sortBy)
 import Data.Map.Strict (Map, (!?))
 import qualified Data.Map.Strict as Map
 import Data.Maybe (fromMaybe)
+import Data.Ord (Ordering)
 import Data.Text (Text, pack, unpack)
 import qualified Data.Text as Text
 import Data.Text.IO (readFile)
@@ -69,25 +71,28 @@ parse t =
         , tokenize "([0-9]+,)+[0-9]+" ','
         )
 
-before :: Successors -> Page -> Page -> Bool
-before m p q = fromMaybe False ((elem q) <$> m !? p)
+before :: Successors -> Page -> Page -> Ordering
+before m p q
+    | p == q = EQ
+    | fromMaybe False ((elem q) <$> m !? p) = LT
+    | otherwise = GT
 
 valid :: Successors -> Update -> Bool
-valid m =
-    and
-        . map (uncurry (before m))
-        . (zip <*> tail)
+valid m us = us == sortBy (before m) us
 
 middle :: [a] -> a
 middle xs = head $ drop (length xs `div` 2) xs
 
 task1 :: ParseResult -> Int
-task1 (m, us) =
-    sum . map middle $ filter (valid m) us
+task1 (m, us) = sum . map middle $ filter (valid m) us
+
+task2 :: ParseResult -> Int
+task2 (m, us) =
+    let ws = filter (not . valid m) us
+     in sum $ map (middle . sortBy (before m)) ws
 
 main :: IO ()
 main = do
     lists <- parse <$> getInput
     putStrLn $ "task 1 answer: " <> show (task1 lists)
-
--- putStrLn $ "task 2 answer: " <> show (task2 lists)
+    putStrLn $ "task 2 answer: " <> show (task2 lists)
