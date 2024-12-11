@@ -17,7 +17,7 @@ type Guard = (Location, Direction)
 type Path = [Location]
 type Clear = Bool
 type Graph = Array Location Clear
-type State = (Graph, Guard)
+type Configuration = (Graph, Guard)
 
 getInput :: IO Text
 getInput = readFile "input-06"
@@ -36,7 +36,7 @@ example =
         \#.........\n\
         \......#..."
 
-parse :: Text -> State
+parse :: Text -> Configuration
 parse t =
     let ls = map unpack $ Text.lines t
         dim = ((1, 1), (length ls, length (head ls)))
@@ -64,7 +64,7 @@ step (i, j) d = case d of
     Down -> (i + 1, j)
     Left -> (i, j - 1)
 
-task1 :: State -> Int
+task1 :: Configuration -> Int
 task1 (g, s) =
     let (_, (rows, cols)) = bounds g
         safe (i, j) = and [i > 0, i <= rows, j > 0, j <= cols]
