@@ -75,10 +75,12 @@ valid m =
         . map (\(p, q) -> fromMaybe False ((elem q) <$> m !? p))
         . (zip <*> tail)
 
+middle :: [a] -> a
+middle xs = head $ drop (length xs `div` 2) xs
+
 task1 :: ParseResult -> Int
 task1 (m, us) =
-    let middle xs = head $ drop (length xs `div` 2) xs
-     in sum . map middle $ filter (valid m) us
+    sum . map middle $ filter (valid m) us
 
 main :: IO ()
 main = do
