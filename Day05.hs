@@ -73,10 +73,10 @@ parse t =
 task1 :: ParseResult -> Int
 task1 (m, us) =
     let middle xs = head $ drop (length xs `div` 2) xs
-        valid u =
-            zip u (tail u)
-                & map (\(p, q) -> fromMaybe False ((elem q) <$> m !? p))
-                & and
+        valid =
+            and
+                . map (\(p, q) -> fromMaybe False ((elem q) <$> m !? p))
+                . (zip <*> tail)
      in filter valid us
             & map middle
             & sum
