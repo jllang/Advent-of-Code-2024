@@ -2,7 +2,6 @@
 
 module Day05 where
 
-import Data.Function ((&))
 import Data.Map.Strict (Map, (!?))
 import qualified Data.Map.Strict as Map
 import Data.Maybe (fromMaybe)
@@ -77,9 +76,7 @@ task1 (m, us) =
             and
                 . map (\(p, q) -> fromMaybe False ((elem q) <$> m !? p))
                 . (zip <*> tail)
-     in filter valid us
-            & map middle
-            & sum
+     in sum . map middle $ filter valid us
 
 main :: IO ()
 main = do
