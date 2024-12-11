@@ -69,14 +69,16 @@ parse t =
         , tokenize "([0-9]+,)+[0-9]+" ','
         )
 
+valid :: Successors -> Update -> Bool
+valid m =
+    and
+        . map (\(p, q) -> fromMaybe False ((elem q) <$> m !? p))
+        . (zip <*> tail)
+
 task1 :: ParseResult -> Int
 task1 (m, us) =
     let middle xs = head $ drop (length xs `div` 2) xs
-        valid =
-            and
-                . map (\(p, q) -> fromMaybe False ((elem q) <$> m !? p))
-                . (zip <*> tail)
-     in sum . map middle $ filter valid us
+     in sum . map middle $ filter (valid m) us
 
 main :: IO ()
 main = do
