@@ -62,7 +62,7 @@ parse t =
     let tokenize :: Regex -> Delimiter -> [[Page]]
         tokenize r d =
             map (read . unpack) . Text.split (== d)
-                <$> (getAllTextMatches (t =~ r))
+                <$> getAllTextMatches (t =~ r)
         rule r m =
             case r of
                 [lhs, rhs] -> Map.insertWith (<>) lhs [rhs] m
@@ -74,14 +74,14 @@ parse t =
 before :: Successors -> Page -> Page -> Ordering
 before m p q
     | p == q = EQ
-    | fromMaybe False ((elem q) <$> m !? p) = LT
+    | fromMaybe False (elem q <$> m !? p) = LT
     | otherwise = GT
 
 valid :: Successors -> Update -> Bool
 valid m us = us == sortBy (before m) us
 
 middle :: [a] -> a
-middle xs = head $ drop (length xs `div` 2) xs
+middle xs = xs !! (length xs `div` 2)
 
 task1 :: ParseResult -> Int
 task1 (m, us) = sum . map middle $ filter (valid m) us
