@@ -14,7 +14,7 @@ import Prelude hiding (Either (..), readFile)
 type Location = (Int, Int)
 data Direction = Up | Right | Down | Left deriving (Show)
 type Guard = (Location, Direction)
-type Path = [Location]
+type Path = [Guard]
 type Clear = Bool
 type Graph = Array Location Clear
 type Configuration = (Graph, Guard)
@@ -64,8 +64,8 @@ step (i, j) d = case d of
     Down -> (i + 1, j)
     Left -> (i, j - 1)
 
-task1 :: Configuration -> Int
-task1 (g, s) =
+run :: Configuration -> Path
+run (g, s) =
     let (_, (rows, cols)) = bounds g
         safe (i, j) = and [i > 0, i <= rows, j > 0, j <= cols]
         go (ix, d) =
@@ -76,7 +76,10 @@ task1 (g, s) =
                     (False, _) -> [(ix, d)]
                     (_, _) | g ! ix' -> (ix, d) : go (ix', d)
                     (_, True) -> (ix, d) : go (ix'', d')
-     in length . nub . map fst $ go s
+     in go s
+
+task1 :: Configuration -> Int
+task1 = length . nub . map fst . run
 
 main :: IO ()
 main = do
