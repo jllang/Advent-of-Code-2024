@@ -3,16 +3,19 @@
 
 module Day06 where
 
-import Data.Array (Array, array, bounds, (!))
+import Data.Array (Array, array, bounds, (!), (//))
 import Data.Bifunctor (second)
+import Data.Function ((&))
 import Data.List (find, nub)
+import Data.Set (Set)
+import qualified Data.Set as Set
 import Data.Text (Text, pack, unpack)
 import qualified Data.Text as Text
 import Data.Text.IO (readFile)
 import Prelude hiding (Either (..), readFile)
 
 type Location = (Int, Int)
-data Direction = Up | Right | Down | Left deriving (Show)
+data Direction = Up | Right | Down | Left deriving (Eq, Ord, Show)
 type Guard = (Location, Direction)
 type Path = [Guard]
 type Clear = Bool
@@ -64,22 +67,25 @@ step (i, j) d = case d of
     Down -> (i + 1, j)
     Left -> (i, j - 1)
 
-run :: Configuration -> Path
-run (g, s) =
-    let (_, (rows, cols)) = bounds g
-        safe (i, j) = and [i > 0, i <= rows, j > 0, j <= cols]
-        go (ix, d) =
-            let ix' = step ix d
-                d' = turn d
-                ix'' = step ix d'
-             in case (safe ix', safe ix'') of
-                    (False, _) -> [(ix, d)]
-                    (_, _) | g ! ix' -> (ix, d) : go (ix', d)
-                    (_, True) -> (ix, d) : go (ix'', d')
-     in go s
+checkBounds :: Int -> Int -> Location -> Bool
+checkBounds cols rows (i, j) = and [i > 0, i <= rows, j > 0, j <= cols]
+
+run :: (Location -> Bool) -> (Location -> Bool) -> Guard -> Path
+run safe ok (ix, d) =
+    let ix' = step ix d
+        d' = turn d
+        ix'' = step ix d'
+     in case (safe ix', safe ix'') of
+            (False, _) -> [(ix, d)]
+            (_, _) | ok ix' -> (ix, d) : run safe ok (ix', d)
+            (_, True) -> (ix, d) : run safe ok (ix'', d')
 
 task1 :: Configuration -> Int
-task1 = length . nub . map fst . run
+task1 (g, s) =
+    run (uncurry checkBounds . snd $ bounds g) (g !) s
+        & map fst
+        & nub
+        & length
 
 main :: IO ()
 main = do
