@@ -3,15 +3,17 @@
 
 module Day06 where
 
-import Data.Array (Array, array, bounds, (!))
+import Data.Array (Array, array, assocs, bounds, elems, (!), (//))
 import Data.Bifunctor (second)
 import Data.Function ((&))
-import Data.List (find)
+import Data.List (find, nub)
+import Data.List.Extra (chunksOf)
 import Data.Maybe (fromMaybe)
 import Data.Text (Text, pack, unpack)
 import qualified Data.Text as Text
-import Data.Text.IO
+import Data.Text.IO (readFile)
 import qualified Day04
+import Debug.Trace
 import Prelude hiding (Either (..), readFile)
 
 type Location = (Int, Int)
@@ -20,7 +22,7 @@ type Guard = (Location, Direction)
 type Path = [Location]
 type Clear = Bool
 type Graph = Array Location Clear
-type State = (Graph, Guard, Path)
+type State = (Graph, Guard)
 
 getInput :: IO Text
 getInput = readFile "input-06"
@@ -51,5 +53,48 @@ parse t =
             '>' -> Right
             'v' -> Down
             '<' -> Left
-        path = []
-     in (graph, (fst start, direction), path)
+     in (graph, (fst start, direction))
+
+turn :: Direction -> Direction
+turn d = case d of
+    Up -> Right
+    Right -> Down
+    Down -> Left
+    Left -> Up
+
+step :: Location -> Direction -> Location
+step (i, j) d = case d of
+    Up -> (i - 1, j)
+    Right -> (i, j + 1)
+    Down -> (i + 1, j)
+    Left -> (i, j - 1)
+
+task1 :: State -> Int
+task1 (g, s) =
+    let (_, (rows, cols)) = bounds g
+        safe (i, j) = and [i > 0, i <= rows, j > 0, j <= cols]
+        go (ix, d) =
+            let ix' = step ix d
+                d' = turn d
+                ix'' = step ix d'
+             in case (safe ix', safe ix'') of
+                    (False, _) -> [(ix, d)]
+                    (_, _) | g ! ix' -> (ix, d) : go (ix', d)
+                    (_, True) -> (ix, d) : go (ix'', d')
+        higlight ixs =
+            trace
+                ( unlines
+                    . chunksOf cols
+                    . elems
+                    $ (array (bounds g) . map (second (\b -> if b then '.' else '#')) $ assocs g)
+                        // zip (map fst ixs) (repeat 'X')
+                )
+                ixs
+     in length . nub . map fst $ higlight $ go s
+
+main :: IO ()
+main = do
+    input <- parse <$> getInput
+    putStrLn $ "task 1 answer: " <> show (task1 input)
+
+-- putStrLn $ "task 2 answer: " <> show (task2 input)

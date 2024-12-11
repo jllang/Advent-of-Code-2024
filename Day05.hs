@@ -93,6 +93,6 @@ task2 (m, us) =
 
 main :: IO ()
 main = do
-    lists <- parse <$> getInput
-    putStrLn $ "task 1 answer: " <> show (task1 lists)
-    putStrLn $ "task 2 answer: " <> show (task2 lists)
+    updates <- parse <$> getInput
+    putStrLn $ "task 1 answer: " <> show (task1 updates)
+    putStrLn $ "task 2 answer: " <> show (task2 updates)
