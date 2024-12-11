@@ -3,17 +3,12 @@
 
 module Day06 where
 
-import Data.Array (Array, array, assocs, bounds, elems, (!), (//))
+import Data.Array (Array, array, bounds, (!))
 import Data.Bifunctor (second)
-import Data.Function ((&))
 import Data.List (find, nub)
-import Data.List.Extra (chunksOf)
-import Data.Maybe (fromMaybe)
 import Data.Text (Text, pack, unpack)
 import qualified Data.Text as Text
 import Data.Text.IO (readFile)
-import qualified Day04
-import Debug.Trace
 import Prelude hiding (Either (..), readFile)
 
 type Location = (Int, Int)
@@ -81,16 +76,7 @@ task1 (g, s) =
                     (False, _) -> [(ix, d)]
                     (_, _) | g ! ix' -> (ix, d) : go (ix', d)
                     (_, True) -> (ix, d) : go (ix'', d')
-        higlight ixs =
-            trace
-                ( unlines
-                    . chunksOf cols
-                    . elems
-                    $ (array (bounds g) . map (second (\b -> if b then '.' else '#')) $ assocs g)
-                        // zip (map fst ixs) (repeat 'X')
-                )
-                ixs
-     in length . nub . map fst $ higlight $ go s
+     in length . nub . map fst $ go s
 
 main :: IO ()
 main = do
