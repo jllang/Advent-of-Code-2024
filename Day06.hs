@@ -87,9 +87,30 @@ task1 (g, s) =
         & nub
         & length
 
+task2 :: Configuration -> Int
+task2 (g, s) =
+    let (_, (rows, cols)) = bounds g
+        run' = run (checkBounds rows cols)
+        hasLoop ok =
+            let go v a = \case
+                    [] -> False
+                    (s' : _) | s' `Set.member` v -> True
+                    (s' : rest) -> go (Set.insert s' v) (s' : a) rest
+             in go Set.empty [] (run' ok s)
+        os =
+            [ (g // [((i, j), False)])
+            | i <- [1 .. rows]
+            , j <- [1 .. cols]
+            , g ! (i, j)
+            , (i, j) /= fst s
+            ]
+     in map (hasLoop . (!)) os
+            & filter id
+            & map traceShowId
+            & length
+
 main :: IO ()
 main = do
     input <- parse <$> getInput
     putStrLn $ "task 1 answer: " <> show (task1 input)
-
--- putStrLn $ "task 2 answer: " <> show (task2 input)
+    putStrLn $ "task 2 answer: " <> show (task2 input)
