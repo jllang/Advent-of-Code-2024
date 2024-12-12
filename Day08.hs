@@ -9,7 +9,6 @@ import qualified Data.Set as Set
 import Data.Text (Text, pack, unpack)
 import qualified Data.Text as Text
 import Data.Text.IO (readFile)
-import Debug.Trace
 import Prelude hiding (readFile)
 
 type Location = (Int, Int)
@@ -49,11 +48,17 @@ parse t =
         , (length ls, Text.length (head ls))
         )
 
+infixr 7 *:
+infixr 6 +:, -:
+
 (+:) :: Location -> (Int, Int) -> Location
 (x1, y1) +: (x2, y2) = (x1 + x2, y1 + y2)
 
 (-:) :: Location -> (Int, Int) -> Location
 (x1, y1) -: (x2, y2) = (x1 - x2, y1 - y2)
+
+(*:) :: Int -> Location -> Location
+n *: (x, y) = (n * x, n * y)
 
 safe :: Location -> Location -> Bool
 safe (rows, cols) (x, y) = and [x > 0, x <= cols, y > 0, y <= rows]
@@ -64,7 +69,6 @@ solve antinodes a =
             let ls = a ! freq
              in [antinodes l1 l2 | l1 <- ls, l2 <- ls, l1 /= l2]
                     & foldr' Set.union Set.empty
-                    & (\\ Set.fromList ls)
      in Map.keys a
             & map collect
             & foldr' Set.union Set.empty
@@ -80,11 +84,17 @@ task1 input =
      in solve antinodes (fst input)
 
 task2 :: Input -> Int
-task2 = undefined
+task2 input =
+    let antinodes l1 l2 =
+            let helper f =
+                    [l2 `f` (n *: (l2 -: l1)) | n <- [1 ..]]
+                        & takeWhile (safe (snd input))
+                        & Set.fromList
+             in Set.union (helper (-:)) (helper (+:))
+     in solve antinodes (fst input)
 
 main :: IO ()
 main = do
     input <- parse <$> getInput
     putStrLn $ "task 1 answer: " <> show (task1 input)
-
---     putStrLn $ "task 2 answer: " <> show (task2 input)
+    putStrLn $ "task 2 answer: " <> show (task2 input)
