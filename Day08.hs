@@ -49,15 +49,19 @@ parse t =
         , (length ls, Text.length (head ls))
         )
 
+(+:) :: Location -> (Int, Int) -> Location
+(x1, y1) +: (x2, y2) = (x1 + x2, y1 + y2)
+
+(-:) :: Location -> (Int, Int) -> Location
+(x1, y1) -: (x2, y2) = (x1 - x2, y1 - y2)
+
 task1 :: Input -> Int
 task1 (a, (rows, cols)) =
     let safe (x, y) = and [x > 0, x <= cols, y > 0, y <= rows]
-        antinodes (x1, y1) (x2, y2) =
-            let dx = x2 - x1
-                dy = y2 - y1
+        antinodes l1 l2 =
+            let d = l2 -: l1
              in Set.fromList $
-                    [(lx, ly) | let lx = x2 + dx, let ly = y2 + dy, safe (lx, ly)]
-                        ++ [(lx, ly) | let lx = x1 - dx, let ly = y1 - dy, safe (lx, ly)]
+                    [l | let l = l2 +: d, safe l] ++ [l | let l = l1 -: d, safe l]
         collect freq =
             let ls = a ! freq
              in [antinodes l1 l2 | l1 <- ls, l2 <- ls]
