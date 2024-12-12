@@ -49,7 +49,7 @@ parse t =
     let p = not . (== ':')
         ls = Text.lines t
         rs = map (tread . Text.takeWhile p) ls
-        os = map (map tread . tail . Text.split (== ' ') . Text.takeWhileEnd p) ls
+        os = map (map tread . Text.words . Text.takeWhileEnd p) ls
      in zip rs os
 
 solve :: [Expr -> Expr -> Expr] -> Input -> Int
