@@ -55,14 +55,12 @@ parse t =
 (-:) :: Location -> (Int, Int) -> Location
 (x1, y1) -: (x2, y2) = (x1 - x2, y1 - y2)
 
-task1 :: Input -> Int
-task1 (a, (rows, cols)) =
-    let safe (x, y) = and [x > 0, x <= cols, y > 0, y <= rows]
-        antinodes l1 l2 =
-            let d = l2 -: l1
-             in Set.fromList $
-                    [l | let l = l2 +: d, safe l] ++ [l | let l = l1 -: d, safe l]
-        collect freq =
+safe :: Location -> Location -> Bool
+safe (rows, cols) (x, y) = and [x > 0, x <= cols, y > 0, y <= rows]
+
+solve :: (Location -> Location -> Set Location) -> Antennae -> Int
+solve antinodes a =
+    let collect freq =
             let ls = a ! freq
              in [antinodes l1 l2 | l1 <- ls, l2 <- ls]
                     & foldr' Set.union Set.empty
@@ -71,6 +69,15 @@ task1 (a, (rows, cols)) =
             & map collect
             & foldr' Set.union Set.empty
             & Set.size
+
+task1 :: Input -> Int
+task1 input =
+    let safe' = safe (snd input)
+        antinodes l1 l2 =
+            let d = l2 -: l1
+             in Set.fromList $
+                    [l | let l = l2 +: d, safe' l] ++ [l | let l = l1 -: d, safe' l]
+     in solve antinodes (fst input)
 
 task2 :: Input -> Int
 task2 = undefined
