@@ -62,7 +62,7 @@ solve :: (Location -> Location -> Set Location) -> Antennae -> Int
 solve antinodes a =
     let collect freq =
             let ls = a ! freq
-             in [antinodes l1 l2 | l1 <- ls, l2 <- ls]
+             in [antinodes l1 l2 | l1 <- ls, l2 <- ls, l1 /= l2]
                     & foldr' Set.union Set.empty
                     & (\\ Set.fromList ls)
      in Map.keys a
