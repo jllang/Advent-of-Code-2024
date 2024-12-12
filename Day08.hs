@@ -1,16 +1,20 @@
 module Day08 where
 
-import Data.Map.Strict (Map)
+import Data.Foldable (foldr')
+import Data.Function ((&))
+import Data.Map.Strict (Map, (!))
 import qualified Data.Map.Strict as Map
-import Data.Set (Set)
+import Data.Set (Set, (\\))
 import qualified Data.Set as Set
 import Data.Text (Text, pack, unpack)
 import qualified Data.Text as Text
 import Data.Text.IO (readFile)
+import Debug.Trace
 import Prelude hiding (readFile)
 
 type Location = (Int, Int)
 type Antennae = Map Char [Location]
+type Input = (Antennae, Location)
 type Antinodes = Map Char [Location]
 
 getInput :: IO Text
@@ -32,24 +36,44 @@ example =
         \............\n\
         \............"
 
-parse :: Text -> Antennae
+parse :: Text -> Input
 parse t =
-    Map.fromListWith
-        (++)
-        [ (c, [(i, j)])
-        | (j, l) <- zip [1 ..] (Text.lines t)
-        , (i, c) <- zip [1 ..] (unpack l)
-        , c /= '.'
-        ]
+    let ls = Text.lines t
+     in ( Map.fromListWith
+            (++)
+            [ (c, [(i, j)])
+            | (j, l) <- zip [1 ..] ls
+            , (i, c) <- zip [1 ..] (unpack l)
+            , c /= '.'
+            ]
+        , (length ls, Text.length (head ls))
+        )
 
-task1 :: Antennae -> Int
-task1 = undefined
+task1 :: Input -> Int
+task1 (a, (rows, cols)) =
+    let safe (x, y) = and [x > 0, x <= cols, y > 0, y <= rows]
+        antinodes (x1, y1) (x2, y2) =
+            let dx = x2 - x1
+                dy = y2 - y1
+             in Set.fromList $
+                    [(lx, ly) | let lx = x2 + dx, let ly = y2 + dy, safe (lx, ly)]
+                        ++ [(lx, ly) | let lx = x1 - dx, let ly = y1 - dy, safe (lx, ly)]
+        collect freq =
+            let ls = a ! freq
+             in [antinodes l1 l2 | l1 <- ls, l2 <- ls]
+                    & foldr' Set.union Set.empty
+                    & (\\ Set.fromList ls)
+     in Map.keys a
+            & map collect
+            & foldr' Set.union Set.empty
+            & Set.size
 
-task2 :: Antennae -> Int
+task2 :: Input -> Int
 task2 = undefined
 
--- main :: IO ()
--- main = do
---     input <- parse <$> getInput
---     putStrLn $ "task 1 answer: " <> show (task1 input)
+main :: IO ()
+main = do
+    input <- parse <$> getInput
+    putStrLn $ "task 1 answer: " <> show (task1 input)
+
 --     putStrLn $ "task 2 answer: " <> show (task2 input)
