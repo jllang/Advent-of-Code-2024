@@ -41,8 +41,8 @@ parse t =
      in ( Map.fromListWith
             (++)
             [ (c, [(i, j)])
-            | (j, l) <- zip [1 ..] ls
-            , (i, c) <- zip [1 ..] (unpack l)
+            | (i, l) <- zip [1 ..] ls
+            , (j, c) <- zip [1 ..] (unpack l)
             , c /= '.'
             ]
         , (length ls, Text.length (head ls))
