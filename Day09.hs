@@ -68,3 +68,8 @@ checksum = Vector.ifoldl' (\s i j -> (s + i * j)) 0
 
 task1 :: Input -> IO Int
 task1 = return . checksum <=< compact
+
+main :: IO ()
+main = do
+    input <- parse <$> getInput
+    putStrLn . ("task 1 answer: " <>) . show =<< task1 input
