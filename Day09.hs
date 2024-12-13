@@ -24,10 +24,11 @@ example = return $ pack "2333133121414131402"
 
 parse :: Text -> Input
 parse t =
-    let tokenizer (s, i, is) c =
+    let free = repeat (-1)
+        tokenizer (s, i, is) c =
             case (s, digitToInt c) of
                 (File, n) -> (Free, i + 1, take n (repeat i) ++ is)
-                (Free, n) -> (File, i, take n (repeat (-1)) ++ is)
+                (Free, n) -> (File, i, take n free ++ is)
         show' = \case
             (-1) -> '.'
             n -> intToDigit n
