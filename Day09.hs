@@ -43,25 +43,26 @@ parse t =
 compact :: Input -> IO Input
 compact is =
     let isFree = (-1 ==)
-        go from to free mut
+        go from to mut
             | from < to = do
                 i <- Mut.unsafeRead mut from
                 j <- Mut.unsafeRead mut to
                 case (isFree i, isFree j) of
                     (True, True) ->
-                        go from (to - 1) (free + 2) mut
+                        go from (to - 1) mut
                     (True, False) -> do
                         Mut.unsafeSwap mut from to
-                        go (from + 1) (to - 1) (free + 1) mut
+                        go (from + 1) (to - 1) mut
                     (False, True) ->
-                        go (from + 1) (to - 1) (free + 1) mut
+                        go (from + 1) (to - 1) mut
                     (False, False) ->
-                        go (from + 1) to free mut
-        go _ _ free mut = return $ Mut.slice 0 (Vector.length is - free) mut
+                        go (from + 1) to mut
+        go _ _ mut = return mut
      in return is
             >>= Vector.unsafeThaw
-            >>= go 0 (Vector.length is - 1) 0
+            >>= go 0 (Vector.length is - 1)
             >>= Vector.unsafeFreeze
+            >>= return . Vector.takeWhile (>= 0)
 
 checksum :: Input -> Int
 checksum = Vector.ifoldl' (\s i j -> (s + i * j)) 0
