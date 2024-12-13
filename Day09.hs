@@ -17,7 +17,11 @@ data State = File | Free
 type Input = Vector Int
 
 getInput :: IO Text
-getInput = readFile "input-09"
+getInput = do
+    t <- readFile "input-09"
+    return $ case Text.unsnoc t of
+        Just (t', '\n') -> t'
+        _ -> t
 
 example :: IO Text
 example = return $ pack "2333133121414131402"
