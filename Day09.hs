@@ -42,25 +42,29 @@ parse t =
 
 compact :: Input -> IO Input
 compact is =
-    let go from to mut
+    let isFree = (-1 ==)
+        go from to free mut
             | from < to = do
-                i <- Mut.read mut from
-                j <- Mut.read mut to
-                case (i, j >= 0) of
-                    (-1, True) -> do
-                        Mut.swap mut from to
-                        go (from + 1) (to - 1) mut
-                    (_, True) ->
-                        go (from + 1) to mut
-                    (_, False) ->
-                        go from (to - 1) mut
-        go _ _ mut = return mut
-     in Vector.thaw is
-            >>= go 0 (Vector.length is - 1)
-            >>= Vector.freeze
+                i <- Mut.unsafeRead mut from
+                j <- Mut.unsafeRead mut to
+                case (isFree i, isFree j) of
+                    (True, True) ->
+                        go from (to - 1) (free + 2) mut
+                    (True, False) -> do
+                        Mut.unsafeSwap mut from to
+                        go (from + 1) (to - 1) (free + 1) mut
+                    (False, True) ->
+                        go (from + 1) (to - 1) (free + 1) mut
+                    (False, False) ->
+                        go (from + 1) to free mut
+        go _ _ free mut = return $ Mut.slice 0 (Vector.length is - free) mut
+     in return is
+            >>= Vector.unsafeThaw
+            >>= go 0 (Vector.length is - 1) 0
+            >>= Vector.unsafeFreeze
 
 checksum :: Input -> Int
-checksum = Vector.ifoldr' (\j i -> (+ j * i)) 0
+checksum = Vector.ifoldl' (\s i j -> (s + i * j)) 0
 
 task1 :: Input -> IO Int
 task1 = return . checksum <=< compact
