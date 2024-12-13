@@ -33,14 +33,10 @@ parse t =
             case (s, digitToInt c) of
                 (File, n) -> (Free, i + 1, take n (repeat i) ++ is)
                 (Free, n) -> (File, i, take n free ++ is)
-        show' = \case
-            (-1) -> '.'
-            n -> intToDigit n
      in Text.foldl' tokenizer (File, 0, []) t
             & (\(_, _, is) -> is)
             & Vector.fromList
             & Vector.reverse
-            & \v -> trace (map show' $ Vector.toList v) v
 
 compact :: Input -> Input
 compact = undefined
