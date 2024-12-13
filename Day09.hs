@@ -2,6 +2,7 @@
 
 module Day09 where
 
+import Control.Monad ((<=<))
 import Data.Bifunctor (first)
 import Data.Char (digitToInt, intToDigit)
 import Data.Function ((&))
@@ -10,6 +11,7 @@ import qualified Data.Text as Text
 import Data.Text.IO (readFile)
 import Data.Vector.Unboxed (Vector)
 import qualified Data.Vector.Unboxed as Vector
+import qualified Data.Vector.Unboxed.Mutable as Mut
 import Debug.Trace
 import Prelude hiding (readFile)
 
@@ -38,11 +40,27 @@ parse t =
             & Vector.fromList
             & Vector.reverse
 
-compact :: Input -> Input
-compact = undefined
+compact :: Input -> IO Input
+compact is =
+    let go from to mut
+            | from < to = do
+                i <- Mut.read mut from
+                j <- Mut.read mut to
+                case (i, j >= 0) of
+                    (-1, True) -> do
+                        Mut.swap mut from to
+                        go (from + 1) (to - 1) mut
+                    (_, True) ->
+                        go (from + 1) to mut
+                    (_, False) ->
+                        go from (to - 1) mut
+        go _ _ mut = return mut
+     in Vector.thaw is
+            >>= go 0 (Vector.length is - 1)
+            >>= Vector.freeze
 
 checksum :: Input -> Int
 checksum = Vector.ifoldr' (\j i -> (+ j * i)) 0
 
-task1 :: Input -> Int
-task1 = checksum . compact
+task1 :: Input -> IO Int
+task1 = return . checksum <=< compact
