@@ -3,7 +3,7 @@
 
 module Day09 where
 
-import Control.Monad ((<=<))
+import Control.Monad (mapM_, (<=<))
 import Data.Bifunctor (Bifunctor, bimap, first)
 import Data.Char (digitToInt, intToDigit)
 import Data.Function ((&))
@@ -54,7 +54,7 @@ parse t =
                 x' = x + n
                 mkInput raw =
                     MkInput
-                        ((i, x, n) : input.logical)
+                        ((head raw, x, n) : input.logical)
                         (take n raw ++ input.raw)
              in case s of
                     File ->
@@ -71,7 +71,7 @@ traceDisk s v =
             (-1) -> "."
             n | n > 9 -> "(" ++ show n ++ ")"
             n -> show n
-     in trace (s <> concatMap show' (Vector.toList v)) v
+     in trace (s <> ": " <> concatMap show' (Vector.toList v)) v
 
 isFree :: FileId -> Bool
 isFree = (-1 ==)
@@ -95,7 +95,7 @@ moveRaw _ _ disk = return disk
 
 compactRaw :: Input -> IO (Vector Raw)
 compactRaw (MkInput _ raw) =
-    return (traceDisk "after" raw)
+    return (traceDisk "before" raw)
         >>= Vector.unsafeThaw
         >>= moveRaw 0 (Vector.length raw - 1)
         >>= Vector.unsafeFreeze
@@ -107,27 +107,44 @@ checksum = Vector.ifoldl' (\s i j -> (s + i * j)) 0
 task1 :: Input -> IO Int
 task1 = return . checksum <=< compactRaw
 
+fill :: Filesystem -> Logical -> Position -> Position -> Disk -> IO (Position, Position)
+fill fs (i, x, n) from to disk = do
+    let (j, y, k) = fs ! to
+    if n < k
+        then return (from + 1, to)
+        else do
+            zip [x .. x + n - 1] [y .. y + k - 1]
+                & mapM_ (uncurry (Mut.unsafeSwap disk))
+            fill fs (i, x + k, n - k) from (to - 1) disk
+
 moveFiles :: Filesystem -> Position -> Position -> Disk -> IO Disk
 moveFiles fs from to disk
     | from < to = do
         let (i, x, n) = fs ! from
             (j, y, k) = fs ! to
+        print ((i, x, n), (j, y, k))
         case (isFree i, isFree j) of
             (True, True) ->
-                moveFiles fs from (to - 1) disk
+                trace "(True, True)" $
+                    moveFiles fs from (to - 1) disk
             (True, False) ->
-                if n < k
-                    then moveFiles fs from (to - 1) disk
-                    else moveRaw x (y + k - 1) disk
+                trace "(True, False)" $
+                    if n < k
+                        then moveFiles fs from (to - 1) disk
+                        else do
+                            (from', to') <- fill fs (i, x, n) from to disk
+                            moveFiles fs from' to' disk
             (False, True) ->
-                moveFiles fs (from + 1) (to - 1) disk
+                trace "(False, True)" $
+                    moveFiles fs (from + 1) (to - 1) disk
             (False, False) ->
-                moveFiles fs (from + 1) to disk
+                trace "(False, False)" $
+                    moveFiles fs (from + 1) to disk
 moveFiles _ _ _ disk = return disk
 
 compactLogical :: Input -> IO (Vector Raw)
 compactLogical (MkInput logical raw) =
-    return (traceDisk "after" raw)
+    return (traceDisk "before" raw)
         >>= Vector.unsafeThaw
         >>= moveFiles logical 0 (Vector.length logical - 1)
         >>= Vector.unsafeFreeze
