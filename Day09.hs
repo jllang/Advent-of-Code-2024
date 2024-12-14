@@ -54,7 +54,7 @@ parse t =
                 x' = x + n
                 mkInput raw =
                     MkInput
-                        ((head raw, x, n) : input.logical)
+                        ([(head raw, x, n) | n > 0] ++ input.logical)
                         (take n raw ++ input.raw)
              in case s of
                     File ->
