@@ -10,7 +10,7 @@ import Data.Function ((&))
 import Data.Text (Text, pack, unpack)
 import qualified Data.Text as Text
 import Data.Text.IO (readFile)
-import Data.Vector.Unboxed (Vector)
+import Data.Vector.Unboxed (Vector, (!))
 import qualified Data.Vector.Unboxed as Vector
 import qualified Data.Vector.Unboxed.Mutable as Mut
 import Debug.Trace
@@ -18,10 +18,12 @@ import Prelude hiding (readFile)
 
 data State = File | Free
 type Raw = Int
+type SegmentId = Int
 type Position = Int
 type Length = Int
 type FileId = Int
-type Logical = (FileId, Length)
+type Logical = (FileId, Position, Length)
+type Filesystem = Vector Logical
 type Disk = Mut.MVector Mut.RealWorld Raw
 
 data GenInput a b = MkInput {logical :: a, raw :: b}
@@ -47,19 +49,20 @@ convert = Vector.reverse . Vector.fromList
 parse :: Text -> Input
 parse t =
     let free = repeat (-1)
-        tokenizer (s, i, input) c =
+        tokenizer (s, i, x, input) c =
             let n = digitToInt c
+                x' = x + n
                 mkInput raw =
                     MkInput
-                        ((i, n) : input.logical)
+                        ((i, x, n) : input.logical)
                         (take n raw ++ input.raw)
              in case s of
                     File ->
-                        (Free, i + 1, mkInput $ repeat i)
+                        (Free, i + 1, x', mkInput $ repeat i)
                     Free ->
-                        (File, i, mkInput free)
-     in Text.foldl' tokenizer (File, 0, MkInput [] []) t
-            & (\(_, _, input) -> input)
+                        (File, i, x', mkInput free)
+     in Text.foldl' tokenizer (File, 0, 0, MkInput [] []) t
+            & (\(_, _, _, input) -> input)
             & bimap convert convert
 
 isFree :: FileId -> Bool
@@ -82,20 +85,51 @@ moveRaw from to mut
                 moveRaw (from + 1) to mut
 moveRaw _ _ mut = return mut
 
-compactRaw :: Input -> IO (Vector Int)
+compactRaw :: Input -> IO (Vector Raw)
 compactRaw (MkInput _ raw) =
     Vector.unsafeThaw raw
         >>= moveRaw 0 (Vector.length raw - 1)
         >>= Vector.unsafeFreeze
         >>= return . Vector.takeWhile (>= 0)
 
-checksum :: Vector Int -> Int
+checksum :: Vector Raw -> Int
 checksum = Vector.ifoldl' (\s i j -> (s + i * j)) 0
 
 task1 :: Input -> IO Int
 task1 = return . checksum <=< compactRaw
 
+moveFiles :: Filesystem -> Position -> Position -> Disk -> IO Disk
+moveFiles fs from to mut
+    | from < to = do
+        let (i, x, n) = fs ! from
+            (j, y, k) = fs ! to
+        case (isFree i, isFree j) of
+            (True, True) ->
+                moveFiles fs from (to - 1) mut
+            (True, False) ->
+                if n < k
+                    then moveFiles fs from (to - 1) mut
+                    else moveRaw x (y + k - 1) mut
+            (False, True) ->
+                moveFiles fs (from + 1) (to - 1) mut
+            (False, False) ->
+                moveFiles fs (from + 1) to mut
+moveFiles _ _ _ mut = return mut
+
+compactLogical :: Input -> IO (Vector Int)
+compactLogical (MkInput logical raw) =
+    Vector.unsafeThaw raw
+        >>= moveFiles logical 0 (Vector.length logical - 1)
+        >>= Vector.unsafeFreeze
+
+checksum' :: Vector Int -> Int
+checksum' = Vector.ifoldl' (\s i j -> (s + (if j >= 0 then i * j else 0))) 0
+
+task2 :: Input -> IO Int
+task2 = return . checksum <=< compactLogical
+
 main :: IO ()
 main = do
     input <- parse <$> getInput
     putStrLn . ("task 1 answer: " <>) . show =<< task1 input
+    putStrLn . ("task 2 answer: " <>) . show =<< task2 input
