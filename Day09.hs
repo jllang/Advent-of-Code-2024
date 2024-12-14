@@ -19,9 +19,9 @@ import Prelude hiding (readFile)
 data State = File | Free
 type Disk = Mut.MVector Mut.RealWorld Int
 
-data GenInput a b = MkInput {lengths :: a, segments :: b}
+data GenInput a b = MkInput {logical :: a, raw :: b}
 
-type Input = GenInput (Vector Int) (Vector Int)
+type Input = GenInput (Vector (Int, Int)) (Vector Int)
 
 instance Bifunctor GenInput where
     bimap f g (MkInput xs ys) = MkInput (f xs) (g ys)
@@ -36,20 +36,25 @@ getInput = do
 example :: IO Text
 example = return $ pack "2333133121414131402"
 
+convert :: (Vector.Unbox a) => [a] -> Vector a
+convert = Vector.reverse . Vector.fromList
+
 parse :: Text -> Input
 parse t =
     let free = repeat (-1)
         tokenizer (s, i, input) c =
-            let (n : ns) = digitToInt c : input.lengths
-                mkInput xs = MkInput ns $ take n xs ++ input.segments
+            let n = digitToInt c
+                mkInput raw =
+                    MkInput
+                        ((i, n) : input.logical)
+                        (take n raw ++ input.raw)
              in case s of
                     File ->
                         (Free, i + 1, mkInput $ repeat i)
                     Free ->
                         (File, i, mkInput free)
-        convert = Vector.reverse . Vector.fromList
      in Text.foldl' tokenizer (File, 0, MkInput [] []) t
-            & (\(_, _, is) -> is)
+            & (\(_, _, input) -> input)
             & bimap convert convert
 
 isFree :: Int -> Bool
@@ -72,14 +77,14 @@ moveFile from to mut
                 moveFile (from + 1) to mut
 moveFile _ _ mut = return mut
 
-compact :: Input -> IO Input
-compact is =
-    Vector.unsafeThaw is
-        >>= moveFile 0 (Vector.length is - 1)
+compact :: Input -> IO (Vector Int)
+compact (MkInput _ raw) =
+    Vector.unsafeThaw raw
+        >>= moveFile 0 (Vector.length raw - 1)
         >>= Vector.unsafeFreeze
         >>= return . Vector.takeWhile (>= 0)
 
-checksum :: Input -> Int
+checksum :: Vector Int -> Int
 checksum = Vector.ifoldl' (\s i j -> (s + i * j)) 0
 
 task1 :: Input -> IO Int
