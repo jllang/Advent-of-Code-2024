@@ -69,21 +69,21 @@ isFree :: FileId -> Bool
 isFree = (-1 ==)
 
 moveRaw :: Position -> Position -> Disk -> IO Disk
-moveRaw from to mut
+moveRaw from to disk
     | from < to = do
-        i <- Mut.unsafeRead mut from
-        j <- Mut.unsafeRead mut to
+        i <- Mut.unsafeRead disk from
+        j <- Mut.unsafeRead disk to
         case (isFree i, isFree j) of
             (True, True) ->
-                moveRaw from (to - 1) mut
+                moveRaw from (to - 1) disk
             (True, False) -> do
-                Mut.unsafeSwap mut from to
-                moveRaw (from + 1) (to - 1) mut
+                Mut.unsafeSwap disk from to
+                moveRaw (from + 1) (to - 1) disk
             (False, True) ->
-                moveRaw (from + 1) (to - 1) mut
+                moveRaw (from + 1) (to - 1) disk
             (False, False) ->
-                moveRaw (from + 1) to mut
-moveRaw _ _ mut = return mut
+                moveRaw (from + 1) to disk
+moveRaw _ _ disk = return disk
 
 compactRaw :: Input -> IO (Vector Raw)
 compactRaw (MkInput _ raw) =
@@ -99,22 +99,22 @@ task1 :: Input -> IO Int
 task1 = return . checksum <=< compactRaw
 
 moveFiles :: Filesystem -> Position -> Position -> Disk -> IO Disk
-moveFiles fs from to mut
+moveFiles fs from to disk
     | from < to = do
         let (i, x, n) = fs ! from
             (j, y, k) = fs ! to
         case (isFree i, isFree j) of
             (True, True) ->
-                moveFiles fs from (to - 1) mut
+                moveFiles fs from (to - 1) disk
             (True, False) ->
                 if n < k
-                    then moveFiles fs from (to - 1) mut
-                    else moveRaw x (y + k - 1) mut
+                    then moveFiles fs from (to - 1) disk
+                    else moveRaw x (y + k - 1) disk
             (False, True) ->
-                moveFiles fs (from + 1) (to - 1) mut
+                moveFiles fs (from + 1) (to - 1) disk
             (False, False) ->
-                moveFiles fs (from + 1) to mut
-moveFiles _ _ _ mut = return mut
+                moveFiles fs (from + 1) to disk
+moveFiles _ _ _ disk = return disk
 
 compactLogical :: Input -> IO (Vector Int)
 compactLogical (MkInput logical raw) =
