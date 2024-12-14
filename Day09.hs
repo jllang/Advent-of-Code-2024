@@ -65,6 +65,14 @@ parse t =
             & (\(_, _, _, input) -> input)
             & bimap convert convert
 
+traceDisk :: String -> Vector Raw -> Vector Raw
+traceDisk s v =
+    let show' = \case
+            (-1) -> "."
+            n | n > 9 -> "(" ++ show n ++ ")"
+            n -> show n
+     in trace (s <> concatMap show' (Vector.toList v)) v
+
 isFree :: FileId -> Bool
 isFree = (-1 ==)
 
@@ -87,10 +95,11 @@ moveRaw _ _ disk = return disk
 
 compactRaw :: Input -> IO (Vector Raw)
 compactRaw (MkInput _ raw) =
-    Vector.unsafeThaw raw
+    return (traceDisk "after" raw)
+        >>= Vector.unsafeThaw
         >>= moveRaw 0 (Vector.length raw - 1)
         >>= Vector.unsafeFreeze
-        >>= return . Vector.takeWhile (>= 0)
+        >>= return . traceDisk "after" . Vector.takeWhile (>= 0)
 
 checksum :: Vector Raw -> Int
 checksum = Vector.ifoldl' (\s i j -> (s + i * j)) 0
@@ -116,17 +125,20 @@ moveFiles fs from to disk
                 moveFiles fs (from + 1) to disk
 moveFiles _ _ _ disk = return disk
 
-compactLogical :: Input -> IO (Vector Int)
+compactLogical :: Input -> IO (Vector Raw)
 compactLogical (MkInput logical raw) =
-    Vector.unsafeThaw raw
+    return (traceDisk "after" raw)
+        >>= Vector.unsafeThaw
         >>= moveFiles logical 0 (Vector.length logical - 1)
         >>= Vector.unsafeFreeze
+        >>= return . traceDisk "after"
 
-checksum' :: Vector Int -> Int
-checksum' = Vector.ifoldl' (\s i j -> (s + (if j >= 0 then i * j else 0))) 0
+checksum' :: Vector Raw -> Int
+checksum' =
+    Vector.ifoldl' (\s i j -> (s + (if j >= 0 then i * j else 0))) 0
 
 task2 :: Input -> IO Int
-task2 = return . checksum <=< compactLogical
+task2 = return . checksum' <=< compactLogical
 
 main :: IO ()
 main = do
