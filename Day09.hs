@@ -17,6 +17,7 @@ import Prelude hiding (readFile)
 
 data State = File | Free
 type Input = Vector Int
+type MutableInput = Mut.MVector Mut.RealWorld Int
 
 getInput :: IO Text
 getInput = do
@@ -40,28 +41,32 @@ parse t =
             & Vector.fromList
             & Vector.reverse
 
+isFree :: Int -> Bool
+isFree = (-1 ==)
+
+moveFile :: Int -> Int -> MutableInput -> IO MutableInput
+moveFile from to mut
+    | from < to = do
+        i <- Mut.unsafeRead mut from
+        j <- Mut.unsafeRead mut to
+        case (isFree i, isFree j) of
+            (True, True) ->
+                moveFile from (to - 1) mut
+            (True, False) -> do
+                Mut.unsafeSwap mut from to
+                moveFile (from + 1) (to - 1) mut
+            (False, True) ->
+                moveFile (from + 1) (to - 1) mut
+            (False, False) ->
+                moveFile (from + 1) to mut
+moveFile _ _ mut = return mut
+
 compact :: Input -> IO Input
 compact is =
-    let isFree = (-1 ==)
-        go from to mut
-            | from < to = do
-                i <- Mut.unsafeRead mut from
-                j <- Mut.unsafeRead mut to
-                case (isFree i, isFree j) of
-                    (True, True) ->
-                        go from (to - 1) mut
-                    (True, False) -> do
-                        Mut.unsafeSwap mut from to
-                        go (from + 1) (to - 1) mut
-                    (False, True) ->
-                        go (from + 1) (to - 1) mut
-                    (False, False) ->
-                        go (from + 1) to mut
-        go _ _ mut = return mut
-     in Vector.unsafeThaw is
-            >>= go 0 (Vector.length is - 1)
-            >>= Vector.unsafeFreeze
-            >>= return . Vector.takeWhile (>= 0)
+    Vector.unsafeThaw is
+        >>= moveFile 0 (Vector.length is - 1)
+        >>= Vector.unsafeFreeze
+        >>= return . Vector.takeWhile (>= 0)
 
 checksum :: Input -> Int
 checksum = Vector.ifoldl' (\s i j -> (s + i * j)) 0
