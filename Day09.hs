@@ -58,8 +58,7 @@ compact is =
                     (False, False) ->
                         go (from + 1) to mut
         go _ _ mut = return mut
-     in return is
-            >>= Vector.unsafeThaw
+     in Vector.unsafeThaw is
             >>= go 0 (Vector.length is - 1)
             >>= Vector.unsafeFreeze
             >>= return . Vector.takeWhile (>= 0)
