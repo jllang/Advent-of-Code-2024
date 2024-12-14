@@ -1,9 +1,10 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedRecordDot #-}
 
 module Day09 where
 
 import Control.Monad ((<=<))
-import Data.Bifunctor (first)
+import Data.Bifunctor (Bifunctor, bimap, first)
 import Data.Char (digitToInt, intToDigit)
 import Data.Function ((&))
 import Data.Text (Text, pack, unpack)
@@ -16,8 +17,14 @@ import Debug.Trace
 import Prelude hiding (readFile)
 
 data State = File | Free
-type Input = Vector Int
-type MutableInput = Mut.MVector Mut.RealWorld Int
+type Disk = Mut.MVector Mut.RealWorld Int
+
+data GenInput a b = MkInput {lengths :: a, segments :: b}
+
+type Input = GenInput (Vector Int) (Vector Int)
+
+instance Bifunctor GenInput where
+    bimap f g (MkInput xs ys) = MkInput (f xs) (g ys)
 
 getInput :: IO Text
 getInput = do
@@ -32,19 +39,23 @@ example = return $ pack "2333133121414131402"
 parse :: Text -> Input
 parse t =
     let free = repeat (-1)
-        tokenizer (s, i, is) c =
-            case (s, digitToInt c) of
-                (File, n) -> (Free, i + 1, take n (repeat i) ++ is)
-                (Free, n) -> (File, i, take n free ++ is)
-     in Text.foldl' tokenizer (File, 0, []) t
+        tokenizer (s, i, input) c =
+            let (n : ns) = digitToInt c : input.lengths
+                mkInput xs = MkInput ns $ take n xs ++ input.segments
+             in case s of
+                    File ->
+                        (Free, i + 1, mkInput $ repeat i)
+                    Free ->
+                        (File, i, mkInput free)
+        convert = Vector.reverse . Vector.fromList
+     in Text.foldl' tokenizer (File, 0, MkInput [] []) t
             & (\(_, _, is) -> is)
-            & Vector.fromList
-            & Vector.reverse
+            & bimap convert convert
 
 isFree :: Int -> Bool
 isFree = (-1 ==)
 
-moveFile :: Int -> Int -> MutableInput -> IO MutableInput
+moveFile :: Int -> Int -> Disk -> IO Disk
 moveFile from to mut
     | from < to = do
         i <- Mut.unsafeRead mut from
