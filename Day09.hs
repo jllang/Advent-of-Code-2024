@@ -17,11 +17,16 @@ import Debug.Trace
 import Prelude hiding (readFile)
 
 data State = File | Free
-type Disk = Mut.MVector Mut.RealWorld Int
+type Raw = Int
+type Position = Int
+type Length = Int
+type FileId = Int
+type Logical = (FileId, Length)
+type Disk = Mut.MVector Mut.RealWorld Raw
 
 data GenInput a b = MkInput {logical :: a, raw :: b}
 
-type Input = GenInput (Vector (Int, Int)) (Vector Int)
+type Input = GenInput (Vector Logical) (Vector Raw)
 
 instance Bifunctor GenInput where
     bimap f g (MkInput xs ys) = MkInput (f xs) (g ys)
@@ -57,30 +62,30 @@ parse t =
             & (\(_, _, input) -> input)
             & bimap convert convert
 
-isFree :: Int -> Bool
+isFree :: FileId -> Bool
 isFree = (-1 ==)
 
-moveFile :: Int -> Int -> Disk -> IO Disk
-moveFile from to mut
+moveRaw :: Position -> Position -> Disk -> IO Disk
+moveRaw from to mut
     | from < to = do
         i <- Mut.unsafeRead mut from
         j <- Mut.unsafeRead mut to
         case (isFree i, isFree j) of
             (True, True) ->
-                moveFile from (to - 1) mut
+                moveRaw from (to - 1) mut
             (True, False) -> do
                 Mut.unsafeSwap mut from to
-                moveFile (from + 1) (to - 1) mut
+                moveRaw (from + 1) (to - 1) mut
             (False, True) ->
-                moveFile (from + 1) (to - 1) mut
+                moveRaw (from + 1) (to - 1) mut
             (False, False) ->
-                moveFile (from + 1) to mut
-moveFile _ _ mut = return mut
+                moveRaw (from + 1) to mut
+moveRaw _ _ mut = return mut
 
-compact :: Input -> IO (Vector Int)
-compact (MkInput _ raw) =
+compactRaw :: Input -> IO (Vector Int)
+compactRaw (MkInput _ raw) =
     Vector.unsafeThaw raw
-        >>= moveFile 0 (Vector.length raw - 1)
+        >>= moveRaw 0 (Vector.length raw - 1)
         >>= Vector.unsafeFreeze
         >>= return . Vector.takeWhile (>= 0)
 
@@ -88,7 +93,7 @@ checksum :: Vector Int -> Int
 checksum = Vector.ifoldl' (\s i j -> (s + i * j)) 0
 
 task1 :: Input -> IO Int
-task1 = return . checksum <=< compact
+task1 = return . checksum <=< compactRaw
 
 main :: IO ()
 main = do
