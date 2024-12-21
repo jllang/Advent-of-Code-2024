@@ -13,7 +13,7 @@ import qualified Data.Vector.Unboxed.Mutable as Mut
 import Debug.Trace
 import Prelude
 
-type Stone = Int
+type Stone = String
 type Fragment = [Stone]
 type Line = [Stone]
 
@@ -24,16 +24,17 @@ example :: IO String
 example = return "125 17"
 
 parse :: String -> Line
-parse = map read . words
+parse = words
 
 transform :: Stone -> Fragment
-transform n
-    | n == 0 = [1]
-    | l `mod` 2 == 0 = [n `div` l', n `mod` l']
-    | otherwise = [2024 * n]
+transform s =
+    case s of
+        "0" -> ["1"]
+        _ | l `mod` 2 == 0 -> [take l' s, drop l' s]
+        _ -> [show (2024 * (read s :: Int))]
   where
-    l = (1 +) . floor . logBase 10 $ fromIntegral n
-    l' = 10 ^ (l `div` 2)
+    l = length s
+    l' = l `div` 2
 
 step :: Line -> Line
 step = concatMap transform
