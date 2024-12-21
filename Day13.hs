@@ -3,17 +3,12 @@
 module Day13 where
 
 import Control.Monad (guard)
-import Data.Bifunctor (bimap)
 import Data.Function ((&))
 import Data.Maybe (catMaybes)
 import Data.Ratio
-import Data.Text (Text, pack, unpack)
-import qualified Data.Text as Text
+import Data.Text (Text, pack)
 import Data.Text.IO (readFile)
-import Debug.Trace
-import Text.Parsec (Parsec)
 import qualified Text.Parsec as Parsec
-import qualified Text.Parsec.Char as Parsec
 import Prelude hiding (readFile)
 
 data Row a = Row a a a
