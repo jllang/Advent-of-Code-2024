@@ -74,3 +74,10 @@ task1 input =
         & filter (\(a, b) -> denominator a * denominator b == 1)
         & map (uncurry (+) . (bimap ((3 *) . numerator) numerator))
         & sum
+
+main :: IO ()
+main = do
+    input <- parse <$> getInput
+    putStrLn $ "task 1 answer: " <> show (task1 input)
+
+-- putStrLn $ "task 2 answer: " <> show (task2 input)
