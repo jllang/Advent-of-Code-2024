@@ -31,9 +31,11 @@ step = concatMap transform
 task1 :: Line -> Int
 task1 = length . (!! 25) . iterate step
 
+task2 :: Line -> Int
+task2 = length . (!! 75) . iterate step
+
 main :: IO ()
 main = do
     input <- parse <$> getInput
     putStrLn $ "task 1 answer: " <> show (task1 input)
-
--- putStrLn $ "task 1 answer: " <> show (task1 input)
+    putStrLn $ "task 2 answer: " <> show (task2 input)
