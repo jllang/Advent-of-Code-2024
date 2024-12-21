@@ -41,10 +41,10 @@ parse :: Text -> [Pair (Ratio Int)]
 parse t =
     let prefixed prefix p = Parsec.string prefix *> p
         num prefix = fromIntegral . read <$> (prefixed prefix (Parsec.many1 Parsec.digit))
-        mkPair (ax, ay) (bx, by) (x, y) = Pair (Row ax bx x) (Row ay by y)
+        transpose (ax, ay) (bx, by) (x, y) = Pair (Row ax bx x) (Row ay by y)
         emptyLine = Parsec.string "\n\n"
         parser =
-            mkPair
+            transpose
                 <$> ((,) <$> num "Button A: X+" <*> num ", Y+")
                 <*> (prefixed "\n" ((,) <$> num "Button B: X+" <*> num ", Y+"))
                 <*> (prefixed "\n" ((,) <$> num "Prize: X=" <*> num ", Y="))
