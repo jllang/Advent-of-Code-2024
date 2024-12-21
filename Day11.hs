@@ -3,16 +3,6 @@
 
 module Day11 where
 
-import Control.Monad (mapM_, (<=<))
-import Data.Bifunctor (Bifunctor, bimap, first)
-import Data.Char (digitToInt, intToDigit)
-import Data.Function ((&))
-import Data.Vector.Unboxed (Vector, (!))
-import qualified Data.Vector.Unboxed as Vector
-import qualified Data.Vector.Unboxed.Mutable as Mut
-import Debug.Trace
-import Prelude
-
 type Stone = Int
 type Fragment = [Stone]
 type Line = [Stone]
