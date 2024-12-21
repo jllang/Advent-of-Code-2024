@@ -70,9 +70,17 @@ task1 input =
         & map (\(Solution a b) -> 3 * numerator a + numerator b)
         & sum
 
+mapConstants :: (a -> a) -> Pair a -> Pair a
+mapConstants f (Pair (Row ax bx x) (Row ay by y)) =
+    (Pair (Row ax bx (f x)) (Row ay by (f y)))
+
+task2 :: [Pair (Ratio Int)] -> Int
+task2 input =
+    map (mapConstants (+ 10000000000000)) input
+        & task1
+
 main :: IO ()
 main = do
     input <- parse <$> getInput
     putStrLn $ "task 1 answer: " <> show (task1 input)
-
--- putStrLn $ "task 2 answer: " <> show (task2 input)
+    putStrLn $ "task 2 answer: " <> show (task2 input)
